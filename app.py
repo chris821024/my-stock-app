@@ -4,12 +4,21 @@ import pandas as pd
 # 1. 網頁基本設定
 st.set_page_config(page_title="Chris | 當沖損益精算", layout="centered")
 
-# 2. CSS 優化
+# 2. CSS 優化：縮小標題字體確保一行顯示
 st.markdown("""
     <style>
     .block-container { padding-top: 1.5rem; }
-    div[data-testid="stMetricValue"] { font-size: 30px !important; color: #1f77b4; }
+    /* 強制標題在手機上不換行並縮小字體 */
+    h1 { 
+        font-size: 24px !important; 
+        white-space: nowrap; 
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    div[data-testid="stMetricValue"] { font-size: 28px !important; color: #1f77b4; }
     .main { background-color: #ffffff; }
+    /* 讓提示框內的文字間距緊湊一點 */
+    .stAlert { padding: 0.5rem 1rem; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -42,15 +51,16 @@ if buy_p:
         needed_ticks += 1
     final_be_p = buy_p + (needed_ticks * tick)
 
-    # --- 6. 核心數據呈現 (移動位置) ---
+    # --- 6. 核心數據呈現 ---
     st.divider()
     
-    # 將「每跳損益」與「保本資訊」放在一起，方便盤中計算
-    st.info(f"💡 每跳一檔損益：{int(tick * qty * 1000):,} 元 ｜ 向上跳 **{needed_ticks}** 檔 ({final_be_p:.2f}) 開始獲利")
+    # 分成兩行顯示，並統一使用燈泡圖案
+    st.info(f"💡 每跳一檔損益：{int(tick * qty * 1000):,} 元")
+    st.info(f"💡 向上跳 **{needed_ticks}** 檔 ({final_be_p:.2f}) 開始獲利")
 
     c1, c2 = st.columns(2)
     c1.metric("買入總成本", f"{total_cost:,} 元")
-    c2.metric("保本價 (0 損益)", f"{final_be_p:.2f}")
+    c2.metric("保本價", f"{final_be_p:.2f}")
 
     # --- 7. 雙向損益表 ---
     data = []
@@ -73,7 +83,6 @@ if buy_p:
 
     df = pd.DataFrame(data)
 
-    # 顯示表格
     st.dataframe(
         df,
         column_config={
