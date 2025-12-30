@@ -18,7 +18,7 @@ elif buy_p < 500: tick = 0.5
 else: tick = 1.0
 
 # 計算買進成本
-total_cost = (buy_p * qty * 1000) + int(buy_p * qty * 1000 * 0.001425 * disc)
+total_cost = int((buy_p * qty * 1000) + int(buy_p * qty * 1000 * 0.001425 * disc))
 
 # 顯示結果
 st.subheader(f"買入總成本：{total_cost:,} 元")
