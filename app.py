@@ -4,11 +4,11 @@ import pandas as pd
 # 1. 網頁基本設定
 st.set_page_config(page_title="Chris | 當沖損益精算", layout="centered")
 
-# 2. CSS 優化：縮小標題字體確保一行顯示
+# 2. CSS 優化：確保手機版標題與燈泡提示清晰
 st.markdown("""
     <style>
     .block-container { padding-top: 1.5rem; }
-    /* 強制標題在手機上不換行並縮小字體 */
+    /* 強制標題在手機上不換行 */
     h1 { 
         font-size: 24px !important; 
         white-space: nowrap; 
@@ -17,8 +17,7 @@ st.markdown("""
     }
     div[data-testid="stMetricValue"] { font-size: 28px !important; color: #1f77b4; }
     .main { background-color: #ffffff; }
-    /* 讓提示框內的文字間距緊湊一點 */
-    .stAlert { padding: 0.5rem 1rem; }
+    .stAlert { padding: 0.5rem 1rem; margin-bottom: 5px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -32,6 +31,9 @@ with col_in1:
 with col_in2:
     qty = st.number_input("購買張數", value=1, step=1)
 
+# 新增：手續費折扣拉條 (預設 0.28)
+disc = st.slider("手續費折扣 (預設 2.8 折)", 0.1, 1.0, 0.28, step=0.01)
+
 # --- 5. 計算邏輯 ---
 if buy_p:
     # 判斷台股 Tick 大小
@@ -40,7 +42,7 @@ if buy_p:
     elif buy_p < 500: tick = 0.5
     else: tick = 1.0
 
-    disc = 0.28
+    # 使用拉條取得的 disc
     buy_fee = int(buy_p * qty * 1000 * 0.001425 * disc)
     total_cost = int((buy_p * qty * 1000) + buy_fee)
     
@@ -54,7 +56,7 @@ if buy_p:
     # --- 6. 核心數據呈現 ---
     st.divider()
     
-    # 分成兩行顯示，並統一使用燈泡圖案
+    # 兩行燈泡提示
     st.info(f"💡 每跳一檔損益：{int(tick * qty * 1000):,} 元")
     st.info(f"💡 向上跳 **{needed_ticks}** 檔 ({final_be_p:.2f}) 開始獲利")
 
@@ -92,7 +94,7 @@ if buy_p:
         use_container_width=True
     )
     
-    st.caption(f"公式參考：手續費 2.8 折 / 當沖稅率 0.15%")
+    st.caption(f"公式參考：手續費 {disc*10:.1f} 折 / 當沖稅率 0.15%")
 
 else:
     st.info("👋 歡迎！請在上方輸入買入價格開始測算。")
