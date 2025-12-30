@@ -1,26 +1,22 @@
 import streamlit as st
 import pandas as pd
 
-# 1. 網頁基本設定：Chris 專屬標題
+# 1. 網頁基本設定
 st.set_page_config(page_title="Chris | 當沖損益精算", layout="centered")
 
-# 2. 進階美化 CSS
+# 2. CSS 優化
 st.markdown("""
     <style>
-    /* 隱藏上方多餘空間 */
-    .block-container { padding-top: 2rem; }
-    /* 讓數字與文字更具質感 */
-    div[data-testid="stMetricValue"] { font-size: 28px !important; }
-    /* 設定背景為乾淨的白色 */
+    .block-container { padding-top: 1.5rem; }
+    div[data-testid="stMetricValue"] { font-size: 30px !important; color: #1f77b4; }
     .main { background-color: #ffffff; }
     </style>
     """, unsafe_allow_html=True)
 
 # --- 3. 主標題 ---
 st.title("🎯 Chris | 當沖損益精算")
-st.caption("手續費固定 2.8 折｜證交稅 0.15% (當沖減半)")
 
-# --- 4. 手機優化輸入區：直接置頂並排 ---
+# --- 4. 置頂輸入區 ---
 col_in1, col_in2 = st.columns(2)
 with col_in1:
     buy_p = st.number_input("買入價格", value=None, step=0.05, placeholder="輸入價格")
@@ -46,21 +42,17 @@ if buy_p:
         needed_ticks += 1
     final_be_p = buy_p + (needed_ticks * tick)
 
-    # --- 6. 核心數據看板 ---
+    # --- 6. 核心數據呈現 (移動位置) ---
     st.divider()
+    
+    # 將「每跳損益」與「保本資訊」放在一起，方便盤中計算
+    st.info(f"💡 每跳一檔損益：{int(tick * qty * 1000):,} 元 ｜ 向上跳 **{needed_ticks}** 檔 ({final_be_p:.2f}) 開始獲利")
+
     c1, c2 = st.columns(2)
     c1.metric("買入總成本", f"{total_cost:,} 元")
-    c2.metric("損益平衡價", f"{final_be_p:.2f}")
+    c2.metric("保本價 (0 損益)", f"{final_be_p:.2f}")
 
-    # 風險指示燈
-    if needed_ticks <= 1:
-        st.success(f"🟢 低風險｜跳 {needed_ticks} 檔即保本")
-    elif needed_ticks <= 2:
-        st.warning(f"🟡 中風險｜跳 {needed_ticks} 檔保本")
-    else:
-        st.error(f"🔴 高風險｜跳 {needed_ticks} 檔才保本")
-
-    # --- 7. 雙向損益水溫計 (表格優化) ---
+    # --- 7. 雙向損益表 ---
     data = []
     for i in range(5, -6, -1):
         s_p = buy_p + (i * tick)
@@ -74,23 +66,24 @@ if buy_p:
         
         data.append({
             "市場動態": label,
-            "建議賣價": f"{s_p:.2f}",
-            "預估盈虧": net,
-            "報酬率": f"{(net/total_cost)*100:.2f}% {trend}"
+            "賣出價": f"{s_p:.2f}",
+            "預估損益": net,
+            "報酬%": f"{(net/total_cost)*100:.2f}% {trend}"
         })
 
     df = pd.DataFrame(data)
 
+    # 顯示表格
     st.dataframe(
         df,
         column_config={
-            "預估盈虧": st.column_config.NumberColumn("實際損益", format="%d 元"),
+            "預估損益": st.column_config.NumberColumn("實際損益", format="%d 元"),
         },
         hide_index=True,
         use_container_width=True
     )
     
-    st.caption(f"💡 每跳一檔損益約：{int(tick * qty * 1000):,} 元")
+    st.caption(f"公式參考：手續費 2.8 折 / 當沖稅率 0.15%")
 
 else:
-    st.info("👋 盤中交易愉快！請直接在上方輸入買入價格。")
+    st.info("👋 歡迎！請在上方輸入買入價格開始測算。")
